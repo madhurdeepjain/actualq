@@ -1,0 +1,37 @@
+name: release
+
+# Publishes to PyPI when you push a tag like v0.1.0. There is no API token
+# anywhere in this repository or in its secrets: PyPI trusts this specific
+# workflow, in this specific repository, and hands it a token that lives for the
+# length of one run. Nothing exists to leak or to rotate.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m unittest discover -v
+
+  publish:
+    needs: test          # never ship a tag whose tests do not pass
+    runs-on: ubuntu-latest
+    environment: pypi    # must match the environment named on PyPI
+    permissions:
+      id-token: write    # the OIDC token that stands in for a password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade build
+      - run: python -m build
+      - uses: pypa/gh-action-pypi-publish@release/v1

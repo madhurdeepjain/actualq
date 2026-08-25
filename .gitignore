@@ -2,4 +2,13 @@ __pycache__/
 *.pyc
 dist/
 .venv/
+.DS_Store
+
+# Never commit anybody's budget. This repo is about Actual files, so a real one
+# ending up in the working directory is a question of when, not whether.
 *.zip
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+db.sqlite*
+metadata.json

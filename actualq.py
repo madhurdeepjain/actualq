@@ -20,6 +20,7 @@ import argparse
 import csv
 import datetime as dt
 import json
+import os
 import shutil
 import sqlite3
 import sys
@@ -55,7 +56,7 @@ def _newest_zip(directory: Path) -> Path:
         raise SystemExit(
             f"actualq: no .zip found in {directory}\n"
             "  Export one from Actual: Settings -> Export data,\n"
-            "  or name a file: actualq txns path/to/export.zip"
+            "  or name one: actualq txns -f path/to/export.zip"
         )
     return zips[0]
 
@@ -523,7 +524,12 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     try:
         return _run(argv)
-    except BrokenPipeError:  # `actualq txns | head`
+    except BrokenPipeError:
+        # `actualq txns | head`. Catching it is not enough: Python flushes stdout
+        # again on the way out, the pipe is still gone, and it prints a warning over
+        # whatever you piped into. Point the fd at devnull so the last flush lands
+        # somewhere. This is the documented workaround.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
         return 0
     except KeyboardInterrupt:
         return 130

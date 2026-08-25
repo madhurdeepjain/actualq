@@ -1,0 +1,21 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      # Nothing to install: actualq is standard library only, and the tests build
+      # their budget from schema.sql. If this job ever needs a `pip install`,
+      # something has been added that the README promises is not there.
+      - run: python -m unittest discover -v

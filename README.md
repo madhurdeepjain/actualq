@@ -41,15 +41,25 @@ JSON out, nothing to authenticate, and no way to damage the budget.
 
 ## Install
 
-```sh
-uv tool install actualq        # or: pipx install actualq
-```
-
-Or just take the file. It has no dependencies and needs Python 3.11+:
+It is one file with no dependencies, so the simplest thing is to take it
+(Python 3.11+):
 
 ```sh
 curl -O https://raw.githubusercontent.com/madhurdeepjain/actualq/main/actualq.py
 python3 actualq.py accounts
+```
+
+To get it on your PATH as `actualq`:
+
+```sh
+uv tool install git+https://github.com/madhurdeepjain/actualq
+# or: pipx install git+https://github.com/madhurdeepjain/actualq
+```
+
+Or run it once without installing anything at all:
+
+```sh
+uvx --from git+https://github.com/madhurdeepjain/actualq actualq accounts
 ```
 
 ## Use
