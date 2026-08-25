@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "actualq"
+version = "0.1.0"
+description = "Read an Actual Budget export from the command line. No server, no dependencies."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = ["actual", "actualbudget", "budget", "finance", "cli", "sqlite"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business :: Financial :: Accounting",
+]
+dependencies = []
+
+[project.scripts]
+actualq = "actualq:main"
+
+[project.urls]
+Homepage = "https://github.com/madhurdeepjain/actualq"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["actualq.py"]
+
+[tool.hatch.build.targets.wheel.sources]
+"actualq.py" = "actualq.py"
