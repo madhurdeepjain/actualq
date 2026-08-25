@@ -1,5 +1,14 @@
 name: release
 
+# To release:
+#
+#   1. bump __version__ in actualq.py   (pyproject reads it from there)
+#   2. commit, then: git tag v0.1.1 && git push && git push --tags
+#
+# Pushing to main does NOT publish; only a v* tag does. And the version has to be
+# new every time — PyPI refuses to replace a version it already has, so a tag that
+# forgets step 1 fails here with "File already exists".
+#
 # Publishes to PyPI when you push a tag like v0.1.0. There is no API token
 # anywhere in this repository or in its secrets: PyPI trusts this specific
 # workflow, in this specific repository, and hands it a token that lives for the

@@ -28,7 +28,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 # --- finding and opening the file ----------------------------------------
