@@ -61,25 +61,153 @@ python3 actualq.py accounts
 
 ## Use
 
-With no `-f`, it reads the newest `.zip` in the current directory, so the usual
-session is `cd` to wherever you export and start asking.
+An export is a zip. In Actual: **Settings → Export data**. That is the whole
+setup — nothing to run, no password, no sync id.
+
+### Pointing it at a file
+
+With no `-f`, `actualq` reads the newest `.zip` in the current directory, so the
+usual session is `cd` to wherever your browser drops exports and start asking:
 
 ```sh
-actualq accounts                                  # balances, ranges, row counts
-actualq txns --since 2026-01 --account Checking   # transactions
-actualq categories --since 2026-07 --until 2026-07
-actualq payees --limit 20
-actualq sql "select ..."                          # anything else
-actualq schema                                    # the field guide
+cd ~/Downloads
+actualq accounts
 ```
 
-`txns` filters: `--since` `--until` `--account` `--category` `--payee`
-`--search` `--limit` `--uncategorized` `--no-transfers` `--splits`.
+`-f` takes a file or a directory:
+
+```sh
+actualq txns -f ~/budgets/2026-08-25-My-Finances.zip   # that export
+actualq txns -f ~/budgets/                             # newest export in there
+actualq txns -f ~/Documents/Actual/My-Finances-a1b2c3/ # a live data directory
+```
+
+The last form reads the folder Actual itself keeps `db.sqlite` in, if you would
+rather not export at all. It is still a copy — the database and its `-wal`
+sidecar are copied to a temp directory and opened read-only, so a running Actual
+is neither disturbed nor half-read.
+
+### The commands
+
+```sh
+actualq accounts    # balances, date ranges, row counts, one line per account
+actualq txns        # transactions, newest first
+actualq categories  # every category with its total and count
+actualq payees      # payees by how often they appear
+actualq sql "..."   # anything the above will not answer
+actualq schema      # what the tables mean and where the traps are
+```
+
+`txns` and `categories` take `--since` / `--until`. `txns` also takes:
+
+| filter | what it does |
+| --- | --- |
+| `--account NAME` | substring, case-insensitive: `--account cred` |
+| `--category NAME` | substring of the category **or** its group |
+| `--payee NAME` | substring |
+| `--search TEXT` | notes, payee, or the bank's own wording (`imported_payee`) |
+| `--limit N` | first N rows |
+| `--uncategorized` | rows with no category, ignoring split parents and transfers |
+| `--no-transfers` | drop movements between your own accounts |
+| `--splits MODE` | `leaves` (default), `parents`, `children`, `all` — see below |
 
 Dates take a year, a month or a day — `--since 2026`, `--since 2026-08`,
-`--since 2026-08-22` — and `--until` means the **last** day of whatever you name.
+`--since 2026-08-22` — and `--until` means the **last** day of whatever you
+name, so `--since 2026-07 --until 2026-07` is exactly July.
 
 Output is an aligned table by default, `--json` for an array, `--csv` for CSV.
+The table drops the wide, low-signal columns (`id`, `imported_payee`) and clips
+long cells so one 900-character bank descriptor cannot set a column's width;
+`--json` and `--csv` always carry every field, whole. They also carry the exact
+integers — `amount_cents`, `total_cents`, `balance_cents` — which is what a
+script should do arithmetic on, so nothing rounds twice.
+
+### Recipes
+
+```sh
+# What did groceries cost in July?
+actualq categories --since 2026-07 --until 2026-07
+
+# Everything at one payee this year
+actualq txns --since 2026 --payee costco
+
+# Real spending: no transfers between my own accounts, credit card only
+actualq txns --since 2026-08 --account "credit" --no-transfers
+
+# Rows I never filed
+actualq txns --uncategorized
+
+# Find that charge I half-remember
+actualq txns --search "annual fee"
+
+# The pieces of a split, rather than the bank's single line
+actualq txns --since 2026-08 --splits children
+
+# Hand a month to a spreadsheet
+actualq txns --since 2026-07 --until 2026-07 --csv > july.csv
+
+# Total a filtered set exactly, in cents
+actualq txns --since 2026-08 --category grocery --json \
+  | jq '[.[].amount_cents] | add / 100'
+```
+
+`actualq txns | head` is fine; a closed pipe exits cleanly rather than printing a
+traceback over what you piped into.
+
+### `actualq sql`
+
+Everything above is convenience over one read-only SQLite connection. When the
+question does not fit a flag, write the query:
+
+```sh
+# Net by month, on-budget accounts only
+actualq sql "
+  select t.date/100 as month, sum(t.amount)/100.0 as net
+  from v_transactions t
+  join accounts a on a.id = t.account
+  where t.is_parent = 0 and a.offbudget = 0
+  group by month order by month"
+```
+
+```
+ month       net
+------  --------
+202601  2,708.37
+202602  2,705.47
+202603  2,819.82
+...
+```
+
+```sh
+# Spending by category by month, income excluded
+actualq sql "
+  select t.date/100 as month,
+         g.name || ' / ' || c.name as category,
+         sum(-t.amount)/100.0 as spent
+  from v_transactions t
+  join categories c        on c.id = t.category
+  join category_groups g   on g.id = c.cat_group
+  where t.is_parent = 0 and c.is_income = 0 and t.date >= 20260101
+  group by month, category
+  order by month, spent desc"
+```
+
+Two things to keep in mind here. `sql` prints what the database holds, so dates
+come back as `20260102` and amounts as cents unless you convert them yourself —
+the other commands do that for you. And writes fail: the connection is opened
+`mode=ro`, so `delete from transactions` is an error, not a lost budget.
+
+### With an agent
+
+In Claude Code:
+
+```sh
+/plugin marketplace add madhurdeepjain/actualq
+/plugin install actualq@actualq
+```
+
+For Codex or anything else that reads `SKILL.md`, drop `skills/actualq/` into
+`~/.agents/skills/`.
 
 ## What it will not do
 

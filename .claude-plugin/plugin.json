@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "actualq",
+  "description": "Read an Actual Budget export: spending, balances, transactions, and the four schema traps that quietly return wrong numbers.",
+  "author": {
+    "name": "Madhur Deep Jain",
+    "url": "https://github.com/madhurdeepjain"
+  },
+  "homepage": "https://github.com/madhurdeepjain/actualq",
+  "repository": "https://github.com/madhurdeepjain/actualq",
+  "license": "MIT",
+  "keywords": ["actual", "actualbudget", "budget", "finance", "sqlite"]
+}

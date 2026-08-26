@@ -1,0 +1,15 @@
+{
+  "name": "actualq",
+  "description": "The actualq skill: reading an Actual Budget export without falling into its schema's four quiet traps.",
+  "owner": {
+    "name": "Madhur Deep Jain",
+    "url": "https://github.com/madhurdeepjain"
+  },
+  "plugins": [
+    {
+      "name": "actualq",
+      "source": "./",
+      "description": "Read an Actual Budget export: spending, balances, transactions, and the four schema traps that quietly return wrong numbers."
+    }
+  ]
+}
